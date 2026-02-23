@@ -2,6 +2,21 @@
 
 A reasoning framework that helps LLMs analyze distributed system changes for correctness. Not a documentation system — a structured thinking process.
 
+## Boundary Detector (Always Active)
+
+When working on a distributed system (multiple processes, services, or storage systems communicating), watch for these signals before writing code:
+
+| Signal | You are... | Module |
+|--------|-----------|--------|
+| Changing state/status that another process reads or reacts to | `state-mutation` | modules/state-mutation.md |
+| Moving data across a serialization, network, or storage boundary | `data-lifecycle` | modules/data-lifecycle.md |
+| Writing error/retry/timeout handling for cross-component operations | `failure-mode` | modules/failure-mode.md |
+| Adding a new message type, API call, or event between components | `interaction` | modules/interaction.md |
+
+**Concurrency signal**: Check the project topology file. If the component you're modifying is on the **"1" side of a 1:N relationship**, also load `modules/concurrency.md`.
+
+**Procedure**: Detect signal → read the relevant module → walk its checklist → if topology shows 1:N, run concurrency pass → flag concerns before writing code. No overhead for single-component changes.
+
 ## Skills
 
 | Command | Phase | Purpose |
@@ -14,8 +29,8 @@ A reasoning framework that helps LLMs analyze distributed system changes for cor
 
 Three layers, loaded incrementally to minimize context cost:
 
-**Layer 1 — Boundary Detector** (always loaded, ~30 lines):
-Recognizes when a code change crosses a distributed boundary. Signals: state-mutation, data-lifecycle, failure-mode, interaction, concurrency.
+**Layer 1 — Boundary Detector** (above — always loaded with this file):
+Recognizes when a code change crosses a distributed boundary.
 
 **Layer 2 — Reasoning Modules** (loaded on demand, ~50 lines each):
 Five modules covering two dimensions:
@@ -25,15 +40,7 @@ Five modules covering two dimensions:
 **Layer 3 — Anti-Pattern Catalog** (loaded for review/debug):
 Named patterns with shape/detection/fix. Growing collection, auto-drafted on discovery.
 
-## How It Works
-
-### Passive Detection
-The boundary detector (in `detector.md`) watches for signals during normal work. When detected, it triggers loading the relevant reasoning module before writing code.
-
-### Active Analysis
-Invoke a skill explicitly: `/dist-check`, `/dist-design`, or `/dist-debug`. The skill drives a structured analysis procedure.
-
-### Two-Pass Analysis (coding time)
+## Two-Pass Analysis (coding time)
 1. **Pass 1 — Boundary correctness**: Does this single operation work correctly across components?
 2. **Pass 2 — Concurrency correctness**: Do simultaneous operations conflict? (Only runs when topology indicates 1:N at the boundary.)
 
@@ -47,15 +54,13 @@ Each project using this plugin should have a topology file (see `templates/topol
 - Auto-updated when code changes affect component relationships
 - Captures: components, cardinality (fixed/dynamic/exact counts), communication mechanisms, convergence points
 
-### Boundary Detector in Memory
-Copy the content of `detector.md` into the project's Claude memory file for passive detection during normal work.
-
 ## Key Files
 
 ```
 distributed-architect/
-├── CLAUDE.md              # This file
-├── detector.md            # Layer 1: boundary signal detector
+├── .claude-plugin/
+│   └── plugin.json        # Plugin manifest
+├── CLAUDE.md              # This file (includes Layer 1 detector)
 ├── modules/               # Layer 2: reasoning checklists
 │   ├── state-mutation.md
 │   ├── data-lifecycle.md
@@ -65,8 +70,6 @@ distributed-architect/
 ├── catalog/               # Layer 3: anti-pattern reference
 │   ├── _drafts/           # Auto-captured, pending promotion
 │   └── *.md               # Promoted patterns
-├── .claude-plugin/
-│   └── plugin.json        # Plugin manifest
 ├── skills/                # Registered skills (SKILL.md per skill)
 │   ├── dist-check/
 │   │   └── SKILL.md
@@ -77,10 +80,6 @@ distributed-architect/
 ├── templates/
 │   └── topology.yaml      # Project topology template
 └── docs/                  # Design documents
-    ├── design-philosophy.md
-    ├── plugin-architecture.md
-    ├── reasoning-framework.md
-    └── case-study-ai-video-platform.md
 ```
 
 ## Anti-Pattern Catalog Learning Loop
