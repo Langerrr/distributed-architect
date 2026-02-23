@@ -71,7 +71,22 @@ Hypothesis 1 (highest confidence):
   Verification: [how to confirm — specific log, query, or test]
 ```
 
-## Step 7: Output
+## Step 7: Forward Trace the Fix
+
+For each hypothesis, take the proposed fix and trace it **forward** through the same path the backward trace established. The backward trace gave you the chain; now run the fix through it in the opposite direction:
+
+```
+Fix applied at: [root cause component]
+   -> Does it change: [state/data at component Y]?
+      -> Does that resolve: [the dependency at component X]?
+         -> Does the symptom disappear?
+```
+
+At each hop, ask: **does this resolve for all data, or only for new data?**
+
+If any hop answers "only going forward" — the fix leaves accumulated damage from the bug's lifetime. Flag what cleanup is needed (purge, migration, backfill) and whether it can run at startup, as a one-off script, or requires a migration.
+
+## Step 8: Output
 
 ```
 ## Distributed Debug Analysis
@@ -89,6 +104,9 @@ Hypothesis 1 (highest confidence):
 
 ### Hypotheses
 [Ranked by confidence with verification steps]
+
+### Forward Trace
+[For top hypothesis: trace the fix forward through the same path. Flag any hop where the fix only addresses future data, not existing state.]
 
 ### Immediate Investigation Steps
 1. [Most targeted check to confirm/deny top hypothesis]
