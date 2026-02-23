@@ -99,9 +99,8 @@ See `docs/design-philosophy.md` for the full rationale.
 distributed-architect/
 ├── .claude-plugin/
 │   └── plugin.json        # Plugin manifest
-├── CLAUDE.md              # Plugin instructions (LLM reads this)
-├── detector.md            # Layer 1: boundary signal detector
-├── modules/               # Layer 2: reasoning checklists
+├── CLAUDE.md              # Plugin instructions + Layer 1 detector (always loaded)
+├── modules/               # Layer 2: reasoning checklists (loaded on demand)
 │   ├── state-mutation.md
 │   ├── data-lifecycle.md
 │   ├── failure-mode.md
