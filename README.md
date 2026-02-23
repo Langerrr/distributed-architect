@@ -80,10 +80,10 @@ Load as a Claude Code plugin:
 claude --plugin-dir /path/to/distributed-architect
 ```
 
-Then use the skills during your work:
-- `/dist-check` before committing distributed system changes
-- `/dist-design` when evaluating architecture options
-- `/dist-debug` when investigating cross-component failures
+Skills are registered as `/distributed-architect:dist-check`, etc. Use them during your work:
+- `/distributed-architect:dist-check` before committing distributed system changes
+- `/distributed-architect:dist-design` when evaluating architecture options
+- `/distributed-architect:dist-debug` when investigating cross-component failures
 
 For passive detection, copy `detector.md` content into your project's Claude memory file.
 
@@ -97,20 +97,27 @@ See `docs/design-philosophy.md` for the full rationale.
 
 ```
 distributed-architect/
+├── .claude-plugin/
+│   └── plugin.json        # Plugin manifest
 ├── CLAUDE.md              # Plugin instructions (LLM reads this)
-├── detector.md            # Boundary signal detector
-├── modules/               # Reasoning checklists
+├── detector.md            # Layer 1: boundary signal detector
+├── modules/               # Layer 2: reasoning checklists
 │   ├── state-mutation.md
 │   ├── data-lifecycle.md
 │   ├── failure-mode.md
 │   ├── interaction.md
 │   └── concurrency.md
-├── catalog/               # Anti-pattern reference
-├── skills/                # Skill definitions
-│   ├── dist-check.md
-│   ├── dist-design.md
-│   └── dist-debug.md
+├── catalog/               # Layer 3: anti-pattern reference
+│   ├── _drafts/           # Auto-captured, pending promotion
+│   └── *.md               # Promoted patterns
+├── skills/                # Registered skills (SKILL.md per skill)
+│   ├── dist-check/
+│   │   └── SKILL.md
+│   ├── dist-design/
+│   │   └── SKILL.md
+│   └── dist-debug/
+│       └── SKILL.md
 ├── templates/
-│   └── topology.yaml
-└── docs/                  # Design documents
+│   └── topology.yaml      # Project topology template
+└── docs/                  # Design documents & case studies
 ```
