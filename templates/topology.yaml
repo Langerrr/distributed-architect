@@ -1,0 +1,70 @@
+# Project Topology — Distributed System Communication Graph
+#
+# This file maps the components, their relationships, communication mechanisms,
+# and cardinality. It drives automated analysis decisions:
+# - 1:N relationships → concurrency analysis on the "1" side
+# - 1:1 relationships → failure coupling analysis
+# - N:1 relationships → bottleneck/SPOF analysis
+#
+# Lifecycle:
+# - Created manually during initial system exploration
+# - Auto-updated when code changes affect topology (new services, new comm paths)
+#
+# Instructions:
+# 1. List every component that runs as an independent process or service
+# 2. For each pair that communicates, add a relationship entry
+# 3. Be precise about cardinality — fixed counts enable better failure analysis
+
+components:
+  # - name: service-name
+  #   count: 1 (fixed) | N (dynamic) | 3 nodes, 2 replicas (fixed)
+  #   role: Brief description of what this component does
+  #   notes: Optional — scaling constraints, deployment details
+
+  - name: example-api
+    count: 1 (fixed)
+    role: HTTP API gateway, request routing
+  - name: example-worker
+    count: N (dynamic)
+    role: Task execution
+  - name: example-db
+    count: 1 (fixed)
+    role: Persistent storage
+
+relationships:
+  # - from: component-a
+  #   to: component-b
+  #   via: Communication mechanism (WebSocket, HTTP, Redis Streams, gRPC, shared DB, etc.)
+  #   pattern: push | pull | request-response | pub-sub | stream
+  #   notes: Optional — key concerns, known issues
+
+  - from: example-api
+    to: example-worker
+    via: Redis Streams
+    pattern: stream (consumer group)
+    notes: "1:N — api produces, workers consume. Concurrency on consumer side."
+
+  - from: example-worker
+    to: example-api
+    via: WebSocket
+    pattern: push (event messages)
+    notes: "N:1 — concurrent worker messages hit single api. Race on shared state."
+
+  - from: example-api
+    to: example-db
+    via: Connection pool (asyncpg/prisma/etc.)
+    pattern: request-response
+    notes: "N:1 if api scales — connection pool contention."
+
+# Convergence points — resources accessed by multiple components
+# These are the primary locations where concurrency issues arise.
+convergence_points:
+  # - resource: Name of shared resource
+  #   accessed_by: [component-a, component-b]
+  #   type: database table | redis key | file | queue
+  #   concern: What kind of contention (read-write race, write-write conflict, etc.)
+
+  - resource: jobs table
+    accessed_by: [example-api, example-worker]
+    type: database table
+    concern: "API writes status, worker writes status — potential write-write on same row"
