@@ -1,0 +1,8 @@
+{
+  "name": "distributed-architect",
+  "description": "Distributed systems reasoning framework — boundary analysis, concurrency checking, and anti-pattern detection for LLM-assisted development",
+  "version": "0.1.0",
+  "author": {
+    "name": "Langerrr"
+  }
+}

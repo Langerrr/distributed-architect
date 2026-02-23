@@ -65,10 +65,15 @@ distributed-architect/
 ├── catalog/               # Layer 3: anti-pattern reference
 │   ├── _drafts/           # Auto-captured, pending promotion
 │   └── *.md               # Promoted patterns
-├── skills/                # Skill definitions
-│   ├── dist-check.md
-│   ├── dist-design.md
-│   └── dist-debug.md
+├── .claude-plugin/
+│   └── plugin.json        # Plugin manifest
+├── skills/                # Registered skills (SKILL.md per skill)
+│   ├── dist-check/
+│   │   └── SKILL.md
+│   ├── dist-design/
+│   │   └── SKILL.md
+│   └── dist-debug/
+│       └── SKILL.md
 ├── templates/
 │   └── topology.yaml      # Project topology template
 └── docs/                  # Design documents

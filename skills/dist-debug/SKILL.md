@@ -1,42 +1,44 @@
-# dist-debug — Debug-Time Root Cause Analysis
+---
+name: dist-debug
+description: Backward root-cause tracing from symptoms to cause boundary in distributed systems. Use when investigating cross-component failures or production incidents.
+---
 
-Trace distributed system failures backward from symptom to root cause. Identifies which boundary the issue crosses and matches against known anti-patterns.
+# /dist-debug — Debug-Time Root Cause Analysis
 
-## Trigger
-- User invokes `/dist-debug` (with symptoms: error messages, logs, unexpected behavior description)
+Trace distributed system failures backward from symptom to root cause. In distributed systems, the symptom component and the cause component are often different. Trace backward, don't just fix where it hurts.
 
-## Skill Instructions
+## Arguments
 
-You are performing a distributed systems root cause analysis. The key insight: in distributed systems, the symptom component and the cause component are often different. Trace backward, don't just fix where it hurts.
+- `$ARGUMENTS` may contain a symptom description, error message, or log snippet
 
-### Step 1: Gather Symptoms
+## Step 1: Gather Symptoms
 
-Collect from the user:
+From `$ARGUMENTS` or by asking the user:
 - What's the observable behavior? (error message, unexpected state, performance issue)
 - Which component reported the error? (this is the SYMPTOM component)
 - When does it happen? (always, intermittently, under load, after a specific event)
 - Any recent changes? (new code, config change, scaling event)
 
-### Step 2: Load Project Topology
+## Step 2: Load Project Topology
 
 Load the topology file to understand the communication graph. The root cause is almost always at a boundary — knowing the boundaries narrows the search.
 
-### Step 3: Identify the Symptom Boundary
+## Step 3: Identify the Symptom Boundary
 
-The symptom manifests in one component, but the cause is often upstream. From the topology:
+From the topology:
 - What components feed into the symptom component?
 - What data/state does the symptom component depend on from other components?
 - What communication paths lead to the symptom component?
 
-### Step 4: Backward Trace
+## Step 4: Backward Trace
 
 Starting from the symptom, trace backward through the topology:
 
 ```
 Symptom: [what's observed, in which component]
-   ← Depends on: [state/data from component X]
-      ← Which depends on: [operation in component Y]
-         ← Which could fail if: [condition in component Z]
+   <- Depends on: [state/data from component X]
+      <- Which depends on: [operation in component Y]
+         <- Which could fail if: [condition in component Z]
 ```
 
 At each hop, ask:
@@ -44,9 +46,9 @@ At each hop, ask:
 - Could the data arriving here be stale, missing, or corrupted?
 - Could timing/ordering explain the symptom?
 
-### Step 5: Anti-Pattern Match
+## Step 5: Anti-Pattern Match
 
-Check the symptom shape against the catalog:
+Read the catalog entries from the plugin's `catalog/` directory and check the symptom shape:
 
 | Symptom shape | Likely anti-pattern |
 |--------------|-------------------|
@@ -57,9 +59,9 @@ Check the symptom shape against the catalog:
 | Way more retries than configured | AP-5: Compounding Retry |
 | Failures immediately after recovery | AP-6: Premature State Transition |
 
-### Step 6: Hypothesis Formation
+## Step 6: Hypothesis Formation
 
-Based on the backward trace and anti-pattern match, form 1-3 hypotheses:
+Form 1-3 hypotheses based on the backward trace and anti-pattern match:
 
 ```
 Hypothesis 1 (highest confidence):
@@ -67,12 +69,9 @@ Hypothesis 1 (highest confidence):
   Boundary: [which boundary the issue crosses]
   Mechanism: [how the cause produces the symptom]
   Verification: [how to confirm — specific log, query, or test]
-
-Hypothesis 2 (if applicable):
-  ...
 ```
 
-### Step 7: Output
+## Step 7: Output
 
 ```
 ## Distributed Debug Analysis
