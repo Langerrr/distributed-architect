@@ -6,7 +6,9 @@ Use when: You're changing a state/status/flag that another process, service, or 
 
 ### 1. Enumerate Observers
 List ALL actors that read or react to this state — not just the ones in the current file.
-Think: consumers, schedulers, health checkers, UI polling, monitoring, other services.
+Think: consumers, schedulers, health checkers, UI polling, monitoring, other services, **human users, AI agents**.
+
+**Non-deterministic observers**: Humans and AI agents react based on perceived state and affordances, not deterministic code paths. If state is rendered in a UI or consumed by an agent's decision loop, ask: "what action does this state *afford* the observer?" A button that looks clickable will be clicked. An agent that sees a status value will act on it. Trace their likely reactions the same way you trace a process — but account for the fact that their behavior is driven by what they *see*, not what the system *intends*.
 
 ### 2. Trace Each Observer's Reaction
 For each observer:

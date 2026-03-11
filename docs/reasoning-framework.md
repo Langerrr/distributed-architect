@@ -77,7 +77,9 @@ When you change state that other actors observe:
 ```
 1. LIST all actors that read or react to this state.
    (Not just the ones in the current file — think about consumers,
-   schedulers, health checkers, UI polling, etc.)
+   schedulers, health checkers, UI polling, human users, AI agents, etc.)
+   For non-deterministic observers (humans, AI agents): what action does
+   the rendered/perceived state AFFORD them?
 
 2. For EACH observer, answer:
    a. What does this observer do when it sees the new state value?

@@ -8,7 +8,7 @@ When working on a distributed system (multiple processes, services, or storage s
 
 | Signal | You are... | Module |
 |--------|-----------|--------|
-| Changing state/status that another process reads or reacts to | `state-mutation` | modules/state-mutation.md |
+| Changing state/status that another actor (process, human, or AI agent) reads or reacts to | `state-mutation` | modules/state-mutation.md |
 | Moving data across a serialization, network, or storage boundary | `data-lifecycle` | modules/data-lifecycle.md |
 | Writing error/retry/timeout handling for cross-component operations | `failure-mode` | modules/failure-mode.md |
 | Adding a new message type, API call, or event between components | `interaction` | modules/interaction.md |
