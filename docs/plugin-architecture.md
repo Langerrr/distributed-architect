@@ -97,7 +97,7 @@ catalog/
 ```
 
 Loaded in three scenarios:
-1. **Review mode** (`/dist-review`): Scan changes against full catalog
+1. **Check mode** (`/dist-check`): Scan changes against full catalog
 2. **Debug mode** (`/dist-debug`): Pattern-match symptoms to known anti-patterns
 3. **Stuck mode**: When a fix keeps breaking something else
 
@@ -324,12 +324,14 @@ distributed-architect/
 │   ├── compounding-retry.md
 │   └── premature-state-transition.md
 ├── skills/                         # Claude Code skill definitions
-│   ├── dist-check.md               # Coding-time analysis
-│   ├── dist-design.md              # Design-time analysis
-│   └── dist-debug.md               # Debug-time analysis
-├── templates/                      # Project artifact templates
-│   └── topology.yaml               # Template for project topology file
-└── detector.md                     # Layer 1 source (copied to memory/CLAUDE.md)
+│   ├── dist-check/
+│   │   └── SKILL.md               # Coding-time analysis
+│   ├── dist-design/
+│   │   └── SKILL.md               # Design-time analysis
+│   └── dist-debug/
+│       └── SKILL.md               # Debug-time analysis
+└── templates/                      # Project artifact templates
+    └── topology.yaml               # Template for project topology file
 ```
 
 ## Resolved Decisions

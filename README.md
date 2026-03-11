@@ -85,7 +85,7 @@ Skills are registered as `/distributed-architect:dist-check`, etc. Use them duri
 - `/distributed-architect:dist-design` when evaluating architecture options
 - `/distributed-architect:dist-debug` when investigating cross-component failures
 
-For passive detection, copy `detector.md` content into your project's Claude memory file.
+For passive detection, the boundary detector in `CLAUDE.md` is automatically loaded when the plugin is active.
 
 ## Design Philosophy
 
