@@ -1,8 +1,12 @@
 {
   "name": "distributed-architect",
   "description": "Distributed systems reasoning framework — boundary analysis, concurrency checking, and anti-pattern detection for LLM-assisted development",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "Langerrr"
-  }
+  },
+  "license": "MIT",
+  "repository": "https://github.com/Langerrr/distributed-architect",
+  "homepage": "https://github.com/Langerrr/distributed-architect",
+  "keywords": ["distributed-systems", "architecture", "code-review", "debugging", "concurrency"]
 }

@@ -21,8 +21,9 @@ This mirrors how experienced engineers think — they don't mentally recite a 50
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  Layer 1: Boundary Detector (always loaded)          │
-│  ~30 lines in memory file — near-zero context cost   │
+│  Layer 1: Boundary Signal Reference (opt-in)         │
+│  ~30 lines — @-imported into a project's CLAUDE.md,  │
+│  or read directly by the skills                      │
 │  "Am I crossing a boundary? What kind?"              │
 ├─────────────────────────────────────────────────────┤
 │  Layer 2: Reasoning Modules (loaded on demand)       │
@@ -35,11 +36,11 @@ This mirrors how experienced engineers think — they don't mentally recite a 50
 └─────────────────────────────────────────────────────┘
 ```
 
-### Layer 1: Boundary Detector (Always-On)
+### Layer 1: Boundary Signal Reference
 
-Lives in **memory file** (more reliable than CLAUDE.md per testing). Hybrid passive + active triggering:
-- **Passive**: Compact signal list in memory file, fires during normal work
-- **Active**: Explicit skill invocation for deliberate analysis
+Lives in `CLAUDE.md`. Claude Code doesn't auto-load an installed plugin's `CLAUDE.md` into every session, so this layer only runs passively when a project `@`-imports it into its own `CLAUDE.md`. Two triggering modes either way:
+- **Passive**: signal table present in a project's own `CLAUDE.md` (via `@`-import), fires during normal work
+- **Active**: explicit skill invocation (`/dist-check`, `/dist-debug`, `/dist-design`) for deliberate analysis
 
 Its ONLY job is recognition — it doesn't contain the reasoning itself, just the triggers.
 
@@ -288,7 +289,7 @@ The cardinality directly determines which analysis is triggered:
 
 | Component | Lines | When Loaded |
 |-----------|-------|-------------|
-| Layer 1 (detector in memory) | ~30 | Always |
+| Layer 1 (signal reference) | ~30 | Only if `@`-imported into a project's `CLAUDE.md` |
 | Project topology file | ~30 | On skill invocation |
 | One reasoning module | ~50 | On signal detection |
 | Concurrency module (pass 2) | ~50 | When topology indicates 1:N |
@@ -338,7 +339,7 @@ distributed-architect/
 
 | Question | Decision | Rationale |
 |----------|----------|-----------|
-| Where does detector live? | Memory file (hybrid passive + active) | More reliable than CLAUDE.md per testing |
+| Where does detector live? | `CLAUDE.md`, read directly by the skills | Skills are the only trigger Claude Code loads automatically; a project that wants passive detection `@`-imports this file's table into its own `CLAUDE.md` |
 | Auto-create or manual-create topology? | Manual create, auto-update | Initial mapping needs human judgment; updates can be detected |
 | How to handle race conditions? | Separate concurrency module (5th module), triggered by topology cardinality | Concurrency is a distinct dimension, not an overlay on boundary analysis |
 | Sequential or interleaved analysis? | Sequential two-pass (boundary → concurrency) | LLMs use chain-of-thought; parallel/interleaved analysis produces shallow results on both |
@@ -348,7 +349,6 @@ distributed-architect/
 
 ## Open Questions
 
-1. **Passive detection reliability**: Need real-world testing of memory-file-based detection. How often does the LLM miss signals vs catch them?
-2. **Topology auto-update trigger**: What code patterns should trigger "your topology may be stale"? New connection handler? New queue client? Import of a new service client?
-3. **Cross-project portability**: When loaded on a 5-10x more complex project, does the topology format scale, or does it need hierarchy/grouping?
-4. **Abstraction verification**: Periodically check that modules, catalog, and skills remain project-agnostic. Case-study-specific content belongs in `docs/case-study-*.md` files only.
+1. **Topology auto-update trigger**: What code patterns should trigger "your topology may be stale"? New connection handler? New queue client? Import of a new service client?
+2. **Cross-project portability**: When loaded on a 5-10x more complex project, does the topology format scale, or does it need hierarchy/grouping?
+3. **Abstraction verification**: Periodically check that modules, catalog, and skills remain project-agnostic. Case-study-specific content belongs in `docs/case-study-*.md` files only.

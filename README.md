@@ -20,7 +20,7 @@ These aren't knowledge gaps — they're reasoning gaps. The LLM knows about dist
 
 | Layer | What | When Loaded | Context Cost |
 |-------|------|-------------|-------------|
-| Boundary Detector | Recognizes when a change crosses a distributed boundary | Always (~30 lines in memory) | Near zero |
+| Boundary Signal Reference | Recognizes when a change crosses a distributed boundary | `@`-imported into a project's `CLAUDE.md` (opt-in), or read directly by the skills | Near zero |
 | Reasoning Modules | Checklists for specific concern types (5 modules) | On signal detection | ~50 lines each |
 | Anti-Pattern Catalog | Named patterns with shape/detection/fix | Review or debug mode | ~10 lines each |
 
@@ -85,7 +85,7 @@ Skills are registered as `/distributed-architect:dist-check`, etc. Use them duri
 - `/distributed-architect:dist-design` when evaluating architecture options
 - `/distributed-architect:dist-debug` when investigating cross-component failures
 
-For passive detection, the boundary detector in `CLAUDE.md` is automatically loaded when the plugin is active.
+Claude Code doesn't load an installed plugin's `CLAUDE.md` into every session, so passive detection isn't automatic. For a project where you want the boundary-signal table always active, `@`-import it from this plugin's `CLAUDE.md` into that project's own `CLAUDE.md`.
 
 ## Design Philosophy
 
@@ -99,7 +99,7 @@ See `docs/design-philosophy.md` for the full rationale.
 distributed-architect/
 ├── .claude-plugin/
 │   └── plugin.json        # Plugin manifest
-├── CLAUDE.md              # Plugin instructions + Layer 1 detector (always loaded)
+├── CLAUDE.md              # Plugin instructions + boundary-signal reference (not auto-loaded — see Usage)
 ├── modules/               # Layer 2: reasoning checklists (loaded on demand)
 │   ├── state-mutation.md
 │   ├── data-lifecycle.md

@@ -1,6 +1,8 @@
 ---
 name: dist-debug
-description: Backward root-cause tracing from symptoms to cause boundary in distributed systems. Use when investigating cross-component failures or production incidents.
+description: This skill should be used when investigating a failure whose symptom and root cause are suspected to live in different independently-deployed processes or services — a consumer failing because of something a producer did, or a downstream service acting on stale or wrong state from an upstream one. Traces backward from symptom to cause boundary and matches known distributed anti-patterns. Not for a single-process bug with a clear stack trace, and not for reviewing a diff you're about to commit — use dist-check for that.
+argument-hint: "<symptom description, error message, or log snippet>"
+allowed-tools: Read, Grep, Glob
 ---
 
 # /dist-debug — Debug-Time Root Cause Analysis
@@ -15,7 +17,7 @@ Trace distributed system failures backward from symptom to root cause. In distri
 
 From `$ARGUMENTS` or by asking the user:
 - What's the observable behavior? (error message, unexpected state, performance issue)
-- Which component reported the error? (this is the SYMPTOM component)
+- Which component reported the error? (this is the symptom component)
 - When does it happen? (always, intermittently, under load, after a specific event)
 - Any recent changes? (new code, config change, scaling event)
 
@@ -48,16 +50,7 @@ At each hop, ask:
 
 ## Step 5: Anti-Pattern Match
 
-Read the catalog entries from the plugin's `catalog/` directory and check the symptom shape:
-
-| Symptom shape | Likely anti-pattern |
-|--------------|-------------------|
-| Rapid repeated failures from same component | AP-1: Tight Retry Loop |
-| Data missing that "should be there" | AP-2: Lost Data at ACK |
-| Operation marked failed but actually succeeded | AP-3: Channel Conflation |
-| Component making wrong decisions about another's state | AP-4: Boundary State Leak |
-| Way more retries than configured | AP-5: Compounding Retry |
-| Failures immediately after recovery | AP-6: Premature State Transition |
+Read `${CLAUDE_PLUGIN_ROOT}/catalog/INDEX.md`, match the symptom shape against its "Symptom shape" column, then open the matching entry file for the full shape/detection/fix.
 
 ## Step 6: Hypothesis Formation
 

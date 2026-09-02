@@ -1,6 +1,8 @@
 ---
 name: dist-check
-description: Two-pass boundary + concurrency analysis on distributed system code changes. Use before committing changes that cross component boundaries.
+description: This skill should be used before committing a code change that crosses a boundary between independently-deployed processes or services — a new API call, a message queue producer/consumer, a database write another service reads, or a new field in a wire format. Runs a two-pass boundary-correctness and concurrency check. Not for changes confined to a single process or service (ordinary refactors, a frontend calling its own backend), and not for tracing an unknown symptom back to its root cause — use dist-debug for that.
+argument-hint: "[path] | --staged | --diff <range>"
+allowed-tools: Read, Grep, Glob, Bash(git:*)
 ---
 
 # /dist-check — Coding-Time Boundary Analysis
@@ -41,7 +43,7 @@ If none apply (purely internal, single-component change), report "No boundary cr
 
 ## Step 4: Pass 1 — Boundary Correctness
 
-Read the relevant reasoning module from the plugin's `modules/` directory and walk through its checklist. Answer each question concretely for the specific change. Do not skip questions.
+Read the relevant reasoning module from `${CLAUDE_PLUGIN_ROOT}/modules/` and walk through its checklist. Answer each question concretely for the specific change. Do not skip questions.
 
 Document:
 - Each checklist question and your answer
@@ -52,18 +54,12 @@ Document:
 
 Check the topology: is the component being modified on the "1" side of a 1:N relationship?
 
-- **If yes**: Read `modules/concurrency.md` from the plugin directory and walk through its checklist.
+- **If yes**: Read `${CLAUDE_PLUGIN_ROOT}/modules/concurrency.md` and walk through its checklist.
 - **If no**: Skip this pass. Note: "No concurrency concern at this boundary (1:1 or N-side)."
 
 ## Step 6: Anti-Pattern Scan
 
-Check if the change matches any known anti-pattern shapes. Read the catalog entries from the plugin's `catalog/` directory:
-- Tight retry loop (AP-1)
-- Lost data at ACK (AP-2)
-- Channel conflation (AP-3)
-- Boundary state leak (AP-4)
-- Compounding retry (AP-5)
-- Premature state transition (AP-6)
+Read `${CLAUDE_PLUGIN_ROOT}/catalog/INDEX.md` for the current pattern list, then open the matching entry file for the full shape/detection/fix.
 
 ## Step 7: Output
 

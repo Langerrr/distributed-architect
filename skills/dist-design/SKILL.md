@@ -1,6 +1,8 @@
 ---
 name: dist-design
-description: Architecture trade-off analysis for distributed system design decisions. Use when choosing between communication patterns, component boundaries, or scaling strategies.
+description: This skill should be used when choosing between architectural options for how independently-deployed processes or services will communicate, share state, or scale — stream vs. queue vs. RPC, splitting a monolith into services, a replication/partitioning strategy, or cross-service retry and circuit-breaker design. Runs before a specific implementation exists. Not for single-service API or schema design with no cross-service boundary, and once a concrete diff exists, use dist-check instead.
+argument-hint: "<description of what's being designed>"
+allowed-tools: Read, Grep, Glob
 ---
 
 # /dist-design — Design-Time Architecture Analysis
@@ -69,7 +71,7 @@ Present options side by side:
 
 ## Step 6: Flag Unknowns
 
-Explicitly state what you DON'T know that could change the recommendation:
+Explicitly state what you **don't** know that could change the recommendation:
 - Load characteristics not yet known
 - Failure rates of dependencies not measured
 - Scaling requirements still undefined
