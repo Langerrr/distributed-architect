@@ -2,6 +2,7 @@
 
 > Systematic reasoning patterns for LLMs working on distributed systems.
 > Project-agnostic. Scale-independent. Applied at the moment of making changes.
+> These walkthroughs are reasoning references, not required report fields. The skills use relevant questions and report concerns, assumptions and evidence.
 
 ## Core Principle
 

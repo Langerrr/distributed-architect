@@ -2,7 +2,7 @@
 
 Use when: Adding a new message type, API call, event, or communication path between components.
 
-## Checklist
+## Questions
 
 ### 1. Direction and Delivery
 - Is this one-way (fire-and-forget) or request-response?
@@ -34,10 +34,4 @@ Use when: Adding a new message type, API call, event, or communication path betw
 ### 6. Topology Impact
 - Does this change the project topology? (new edge in the communication graph)
 - Does it change cardinality? (e.g., now N components send this message type)
-- Update the topology file if the communication graph changes.
-
-## Red Flags
-- Bidirectional messaging without a convergence guarantee (possible ping-pong)
-- Ordering assumed but not enforced by the transport mechanism
-- New dependency path that makes a previously independent component coupled
-- Message handler that modifies shared state without considering concurrent delivery
+- Does an optional topology file disagree with this relationship? Flag the disagreement rather than editing it.

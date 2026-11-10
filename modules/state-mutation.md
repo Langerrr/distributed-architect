@@ -2,10 +2,10 @@
 
 Use when: You're changing a state/status/flag that another process, service, or component reads or reacts to.
 
-## Checklist
+## Questions
 
 ### 1. Enumerate Observers
-List ALL actors that read or react to this state — not just the ones in the current file.
+Who observes this state, including actors outside the current file, and what does it afford them?
 Think: consumers, schedulers, health checkers, UI polling, monitoring, other services, **human users, AI agents**.
 
 **Non-deterministic observers**: Humans and AI agents react based on perceived state and affordances, not deterministic code paths. If state is rendered in a UI or consumed by an agent's decision loop, ask: "what action does this state *afford* the observer?" A button that looks clickable will be clicked. An agent that sees a status value will act on it. Trace their likely reactions the same way you trace a process — but account for the fact that their behavior is driven by what they *see*, not what the system *intends*.
@@ -16,7 +16,7 @@ For each observer:
 - Does that action produce a side effect?
 - Does that side effect change state that feeds back to the original? (loop check)
 
-### 3. Tick Forward (3 ticks minimum)
+### 3. Tick Forward Three Steps
 ```
 Tick 1: State changes to [new value]
 Tick 2: Observer [name] sees [new value], does [action]
@@ -31,8 +31,3 @@ Example: component advertises "ready" before it can actually handle requests →
 
 ### 5. Validity Check
 Is the new state a valid state with a defined transition out? Or can the system get stuck?
-
-## Red Flags
-- State set to "available/idle/ready" inside an error handler (is the component actually ready?)
-- State visible to remote actors before local preconditions are met
-- Multiple observers that can react to the same state change simultaneously

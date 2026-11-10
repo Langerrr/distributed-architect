@@ -48,7 +48,7 @@ When facing a distributed system change, the LLM first characterizes what kind o
 - New interaction (what feedback loops could this create?)
 
 ### Phase 2: Guided Reasoning
-Based on the change type, apply the relevant reasoning checklist:
+Based on the change type, use the relevant reasoning questions:
 - **State change**: Enumerate all observers. Trace 3 ticks forward from each observer's perspective.
 - **Data at boundary**: Map the lifecycle — created where, stored where, consumed where, deleted where. What's lost at each transition?
 - **Error path**: Distinguish infrastructure failure from logic failure. Check: does the error handler create a state that triggers the same error?

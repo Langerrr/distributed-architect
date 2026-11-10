@@ -2,18 +2,12 @@
 
 Use when: Writing error handling, retry logic, timeout handling, or fallback paths for cross-component operations.
 
-## Checklist
+## Questions
 
 ### 1. Classify the Failure
-Which type is this?
-
-| Type | Description | Typical response |
-|------|------------|-----------------|
-| **Infrastructure** | Component unreachable, network down, service crashed | Transient — retry is appropriate |
-| **Logic/Data** | Operation rejected on its merits (bad input, validation failure) | Permanent — retry wastes resources |
-| **Observation** | Monitoring channel failed, not the operation itself | Operation may still be running — verify before assuming failure |
-
-Getting this classification wrong is the most common distributed error handling mistake.
+- Did the operation fail, or the channel that watches it?
+- Was the component unreachable, or did it reject the input on its merits?
+- What evidence distinguishes transient infrastructure failure from permanent logic/data failure?
 
 ### 2. Infrastructure Failure Checks
 - Will the SAME component be selected on retry? (→ tight loop risk)
@@ -36,9 +30,3 @@ Getting this classification wrong is the most common distributed error handling 
 - How many layers of retry exist? (application, queue/framework, infrastructure)
 - Can retries from different layers compound? (3 app retries x 3 queue retries = 9 attempts)
 - Is retry responsibility assigned to exactly one layer?
-
-## Red Flags
-- Monitoring channel failure treated as operation failure
-- Error handler sets component to "ready" without verifying readiness
-- Multiple independent retry mechanisms for the same failure path
-- No distinction between "retriable" and "permanent" in the error code design

@@ -225,4 +225,4 @@ Every mistake in this session could have been caught by one of these artifacts:
 - Mistake 3 (JSONB storage): Data lifecycle shows ownership and size concerns
 - Mistake 4 (IDLE after requeue): Interaction trace catches the feedback loop at tick 3
 - Mistake 5 (workflow JSON lost): Data lifecycle map shows post-ACK data loss
-- Mistake 6 (DLQ overlap): Failure mode checklist forces enumeration of all retry paths
+- Mistake 6 (DLQ overlap): Failure mode questions prompt examination of retry paths

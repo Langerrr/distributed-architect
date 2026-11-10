@@ -5,73 +5,21 @@ argument-hint: "<description of what's being designed>"
 allowed-tools: Read, Grep, Glob
 ---
 
-# /dist-design — Design-Time Architecture Analysis
+# dist-design — Architecture Options
 
-Evaluate architectural options and their trade-offs for distributed system decisions.
+Understand the proposed decision and constraints: latency, throughput, consistency, failure tolerance and operational cost. Flag missing requirements that could change the choice.
 
-## Arguments
+Read existing code and deploy configuration where available. Use the project's optional `.dist-architect/topology.yaml` (or location in project guidance) as a cache of that reading; flag disagreements and use implementation evidence. For a new system, work from the proposed architecture and distinguish assumptions from established facts.
 
-- `$ARGUMENTS` may contain a description of what's being designed
+Compare viable options for communication, component boundaries, state ownership, failure strategy or scaling. For each option, ask:
 
-## Step 1: Gather Requirements
+- What relationships, cardinality and convergence points does it introduce?
+- What fails, who is affected, and how does recovery work?
+- Can two operations run at once against the same resource?
+- What does it cost to operate, monitor and debug?
 
-Understand from `$ARGUMENTS` or by asking the user:
-- What problem does this solve?
-- What are the constraints (latency, throughput, consistency, fault tolerance)?
-- What components already exist? (load topology file if available)
+Use relevant questions in [State mutation](../../modules/state-mutation.md), [Data lifecycle](../../modules/data-lifecycle.md), [Failure mode](../../modules/failure-mode.md) and [Interaction](../../modules/interaction.md). Use [Concurrency](../../modules/concurrency.md) if the existing or proposed code and deployment permit overlap, regardless of whether a topology file exists.
 
-## Step 2: Load Project Topology
+## Report
 
-Look for a topology file. If it exists, understand the current system shape. If it doesn't, work with whatever architecture context is available.
-
-## Step 3: Identify the Design Decision
-
-Categorize what's being decided:
-
-| Decision type | Examples |
-|--------------|---------|
-| **Communication pattern** | Stream vs queue vs RPC, push vs pull, sync vs async |
-| **Component boundary** | Where to split responsibilities, same process vs separate |
-| **State management** | Where state lives, who owns it, consistency model |
-| **Failure strategy** | Retry policy, circuit breakers, fallback behavior, DLQ design |
-| **Scaling approach** | Horizontal vs vertical, partitioning, sharding, replication |
-
-## Step 4: Enumerate Options
-
-For each viable option, analyze:
-
-**a. Topology impact** — What cardinality does it introduce? New convergence points?
-**b. Failure analysis** — What fails, blast radius, recovery mechanism?
-**c. Concurrency implications** — New concurrent access to shared resources?
-**d. Operational cost** — Complexity to operate, monitor, debug?
-
-## Step 5: Compare and Recommend
-
-Present options side by side:
-
-```
-## Design Analysis: [decision description]
-
-### Option A: [name]
-- Topology: [impact]
-- Failure modes: [key risks]
-- Concurrency: [concerns]
-- Operational cost: [assessment]
-- Best when: [conditions where this option excels]
-
-### Option B: [name]
-- [same structure]
-
-### Recommendation
-[Which option and why, given the stated constraints]
-
-### Topology Changes
-[How the topology file should be updated if adopted]
-```
-
-## Step 6: Flag Unknowns
-
-Explicitly state what you **don't** know that could change the recommendation:
-- Load characteristics not yet known
-- Failure rates of dependencies not measured
-- Scaling requirements still undefined
+Compare options side by side on the trade-offs that decide this case. Recommend one against the stated constraints. Flag unknowns, assumptions and what evidence would change the recommendation. Describe consequential relationship or scaling changes without requiring or editing a topology file. No fixed section per option or empty categories are needed.
