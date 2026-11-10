@@ -49,13 +49,13 @@ class PluginSurfaces(unittest.TestCase):
     def test_codex_skill_root(self):
         manifest = json.loads((ROOT / '.codex-plugin/plugin.json').read_text())
         claude = json.loads((ROOT / '.claude-plugin/plugin.json').read_text())
-        self.assertEqual(manifest['version'], '0.3.0')
+        self.assertEqual(manifest['version'], '0.4.0')
         self.assertEqual(manifest['version'], claude['version'])
         self.assertEqual(manifest['skills'], './skills/')
         skill_root = ROOT / manifest['skills']
         self.assertEqual(
             {str(p.relative_to(skill_root)) for p in skill_root.rglob('SKILL.md')},
-            {f'{name}/SKILL.md' for name in ('dist-check', 'dist-debug', 'dist-design')},
+            {f'{name}/SKILL.md' for name in ('async-reasoning', 'dist-check', 'dist-debug', 'dist-design')},
         )
         self.assertTrue((ROOT / 'modules').is_dir())
         self.assertTrue((ROOT / 'catalog').is_dir())

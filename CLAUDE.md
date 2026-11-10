@@ -23,6 +23,7 @@ Consider the boundary first, then concurrency if operations can overlap. An opti
 | dist-check | Concerns with boundary, mechanism, suggested change, and the change's assumption and failure consequence; one line if no boundary is crossed |
 | dist-debug | Backward cause trace, hypotheses with predicted observations and checks, forward fix trace including existing-data cleanup |
 | dist-design | Option comparison, recommendation against constraints, and unknowns that could change it |
+| async-reasoning | Reasoning about async state within one component: stale reads, init order, write-then-read gaps, races |
 
 In Codex invoke `$distributed-architect:dist-check` (or the other skill name); in Claude Code use `/distributed-architect:dist-check`.
 
