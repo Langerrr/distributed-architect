@@ -10,7 +10,7 @@ With the `langerrr` marketplace configured in Codex:
 codex plugin add distributed-architect@langerrr
 ```
 
-Start a new session, then invoke `$distributed-architect:dist-check`, `$distributed-architect:dist-debug`, or `$distributed-architect:dist-design`.
+Start a new session, then invoke `$distributed-architect:dist-check`, `$distributed-architect:dist-debug`, `$distributed-architect:dist-design`, or `$distributed-architect:async-reasoning`.
 
 For Claude Code:
 
@@ -18,13 +18,14 @@ For Claude Code:
 claude --plugin-dir /path/to/distributed-architect
 ```
 
-Invoke `/distributed-architect:dist-check`, `/distributed-architect:dist-debug`, or `/distributed-architect:dist-design`.
+Invoke `/distributed-architect:dist-check`, `/distributed-architect:dist-debug`, `/distributed-architect:dist-design`, or `/distributed-architect:async-reasoning`.
 
 | Skill | Use |
 |-------|-----|
 | dist-check | Review a path, staged changes or diff range for boundary concerns and the assumptions the change rests on |
 | dist-debug | Trace a symptom backward, test hypotheses against predicted observations, then trace a fix forward through existing and new data |
 | dist-design | Compare architecture options and flag unknowns that could change the recommendation |
+| async-reasoning | Reason about async state within one component: stale reads, init order, write-then-read gaps, races |
 
 The skills load relevant questions from five modules: state mutation, data lifecycle, failure mode, interaction and concurrency. They consult six catalog patterns for known mechanisms. Reports focus on findings, not a filled-out questionnaire; a change crossing no boundary gets one line.
 
