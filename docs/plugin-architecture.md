@@ -14,8 +14,8 @@ This mirrors how experienced engineers think — they don't mentally recite a 50
 1. **Reasoning framework, not documentation system.** The plugin teaches the LLM *how to think*, not *what to know*. Documents go stale; reasoning patterns don't.
 2. **Detection is cheap, reasoning is expensive.** Keep detection always-on, load reasoning on demand.
 3. **Sequential two-pass analysis.** LLMs are chain-of-thought reasoners. Don't attempt interleaved boundary + concurrency analysis. Run them as two sequential passes.
-4. **Auto-update over auto-create.** Topology and project artifacts are manually created (needs human judgment), but updates are auto-triggered when code changes affect them.
-5. **Threshold-based learning.** New anti-patterns are auto-captured, but promoted to the catalog only after repeated occurrence or explicit user confirmation. Reduces noise.
+4. **Optional topology cache.** Read code and deploy configuration; use topology when present and flag disagreements without editing it.
+5. **Draft confirmed discoveries.** dist-debug saves unmatched confirmed causes in the project; maintainers promote patterns manually after repetition or explicit confirmation.
 
 ## Architecture: Three Layers
 
@@ -40,7 +40,7 @@ This mirrors how experienced engineers think — they don't mentally recite a 50
 
 Lives in `CLAUDE.md`. Claude Code doesn't auto-load an installed plugin's `CLAUDE.md` into every session, so this layer only runs passively when a project `@`-imports it into its own `CLAUDE.md`. Two triggering modes either way:
 - **Passive**: signal table present in a project's own `CLAUDE.md` (via `@`-import), fires during normal work
-- **Active**: explicit skill invocation (`/dist-check`, `/dist-debug`, `/dist-design`) for deliberate analysis
+- **Active**: explicit skill invocation (Codex `$distributed-architect:dist-check`, Claude Code `/distributed-architect:dist-check`, and the corresponding dist-debug or dist-design names) for deliberate analysis
 
 Its ONLY job is recognition — it doesn't contain the reasoning itself, just the triggers.
 
@@ -75,13 +75,13 @@ modules/
                          # ordering assumptions, atomicity gaps
 ```
 
-Each module is self-contained (~50 lines), project-agnostic, structured as questions not information.
+Each module is self-contained (~50 lines), project-agnostic, structured as prompts for investigation, not required report fields.
 
 Analysis runs as **two sequential passes**:
 1. Pass 1: Boundary correctness (which of the 4 modules applies?)
-2. Pass 2: Concurrency correctness (does the topology indicate concurrent actors here?)
+2. Pass 2: Concurrency correctness (can operations overlap according to code and deploy configuration?)
 
-Pass 2 is triggered by the **topology file** — if the component being modified is on the "1" side of a 1:N relationship, concurrency analysis is mandatory.
+Pass 2 follows evidence of possible overlap in code and deploy configuration, including within one instance. Topology is an optional cache, not a gate; disagreements are reported.
 
 ### Layer 3: Anti-Pattern Catalog (Reference)
 
@@ -104,7 +104,7 @@ Loaded in three scenarios:
 
 Each entry is ~10 lines. Full catalog is ~60 lines — acceptable when loaded.
 
-**Learning loop**: New patterns are auto-drafted to a scratch area. Promoted to catalog after: (a) same pattern class appears a second time, or (b) user explicitly confirms. First occurrence = draft, second = catalog entry.
+**Learning loop**: dist-debug writes unmatched confirmed causes to `.dist-architect/pattern-drafts/<slug>.md` in the project being investigated. Promotion into `catalog/` is manual after repetition or explicit confirmation.
 
 ## Three Entry Points
 
@@ -119,7 +119,7 @@ Different reasoning for different phases of work:
 ### `/dist-check` — Coding Time
 **Direction**: Forward-looking correctness verification.
 **Question**: "Does this change break anything across boundaries?"
-**Reasoning**: Two-pass analysis (boundary correctness → concurrency correctness), checklist-driven.
+**Reasoning**: Two-pass analysis (boundary correctness → concurrency correctness), guided by relevant questions; reports contain concerns and assumptions rather than every answer.
 **When**: Before committing distributed system changes. Can be auto-triggered by passive detector.
 
 ### `/dist-debug` — Debug Time
@@ -130,7 +130,7 @@ Different reasoning for different phases of work:
 
 ## Project Topology File
 
-A compact, information-dense artifact that drives analysis decisions. **Manually created** on first exploration, **auto-updated** when code changes affect topology-relevant paths.
+An optional cache of component relationships read from code and deploy configuration. Use it when present, report disagreements and follow implementation evidence. No skill requires or automatically edits it.
 
 ### Format
 
@@ -175,7 +175,7 @@ topology:
 
 ### Cardinality as Decision Table
 
-The cardinality directly determines which analysis is triggered:
+Cardinality suggests concerns; code and deploy configuration determine whether operations can overlap, even in a 1:1 relationship:
 
 | Pattern | Primary concern | Analysis triggered |
 |---------|----------------|-------------------|
@@ -197,8 +197,8 @@ The cardinality directly determines which analysis is triggered:
 
 ### Lifecycle
 
-1. **Creation**: Manual, triggered by user during initial codebase exploration or `/dist-design`
-2. **Updates**: Auto-detected when code changes touch topology-relevant paths (new service, new communication channel, cardinality change)
+1. **Creation**: Optional and manual, requested separately by the user
+2. **Updates**: Maintained separately by the project; skills flag disagreements without editing it
 3. **Validation**: Plugin checks if topology file is stale when entering a distributed system task
 
 ## Skill Flows
@@ -208,27 +208,26 @@ The cardinality directly determines which analysis is triggered:
 ```
 1. READ recent changes (git diff or specified files)
 
-2. LOAD project topology file
+2. READ code and deploy config; use project topology as an optional cache
 
-3. CLASSIFY changes against topology:
+3. CLASSIFY changes against implementation evidence:
    → Which components are involved?
    → What type of boundary crossing? (state/data/error/interaction)
    → What is the cardinality at this boundary?
 
 4. PASS 1 — Boundary Correctness:
    → Load relevant reasoning module (1 of 4)
-   → Walk through checklist with concrete answers for this change
+   → Use relevant questions to investigate concerns
 
 5. PASS 2 — Concurrency Correctness:
-   → Check topology: is this component on the "1" side of a 1:N?
+   → Read code and deploy config: can two operations run at once?
    → If yes: load concurrency module, analyze race conditions
-   → If no: skip (1:1 doesn't need concurrency analysis at this boundary)
+   → If no: skip; if unknown, state the overlap assumption and its failure consequence
 
-6. OUTPUT structured analysis:
-   - Boundary type + module applied
-   - Concerns found (or "none")
-   - Anti-patterns matched (if any)
-   - Topology update needed? (if change affects component relationships)
+6. OUTPUT concerns: boundary, mechanism, suggested change.
+   State the assumption the change rests on and what breaks if it is wrong.
+   Flag topology disagreements affecting that assumption.
+   No boundary crossing: one line.
 ```
 
 ### `/dist-debug` (Debug Time)
@@ -236,7 +235,7 @@ The cardinality directly determines which analysis is triggered:
 ```
 1. GATHER symptoms (user description, error logs, behavior)
 
-2. LOAD project topology file
+2. READ code and deploy config; use project topology as an optional cache
 
 3. IDENTIFY the symptom component (where the error manifests)
 
@@ -248,13 +247,16 @@ The cardinality directly determines which analysis is triggered:
 5. CHECK anti-pattern catalog:
    → Do symptoms match a known pattern shape?
 
-6. NARROW to likely root cause boundary
+6. TEST hypotheses: predict observations, run available checks or name unrun checks.
+   TRACE the fix forward: does each hop repair existing data as well as new data?
+   DRAFT unmatched confirmed causes in the project pattern-drafts directory.
 
 7. OUTPUT:
    - Symptom vs probable cause component
    - Boundary where the issue likely originates
    - Anti-pattern match (if any)
-   - Suggested investigation steps
+   - Predicted observations and check results or named unrun checks
+   - Forward trace and existing-data repair; saved draft when relevant
 ```
 
 ### `/dist-design` (Design Time)
@@ -262,7 +264,7 @@ The cardinality directly determines which analysis is triggered:
 ```
 1. GATHER requirements (what capability is being added)
 
-2. LOAD project topology file (if exists)
+2. READ code and deploy config; use project topology as an optional cache (if exists)
 
 3. IDENTIFY design decision needed:
    → New component? New communication path? Scaling change?
@@ -282,7 +284,7 @@ The cardinality directly determines which analysis is triggered:
 6. OUTPUT:
    - Options compared with trade-offs
    - Recommended option with rationale
-   - Topology changes if adopted
+   - Relationship changes if adopted; unknowns that could change the recommendation
 ```
 
 ## Context Budget
@@ -290,9 +292,9 @@ The cardinality directly determines which analysis is triggered:
 | Component | Lines | When Loaded |
 |-----------|-------|-------------|
 | Layer 1 (signal reference) | ~30 | Only if `@`-imported into a project's `CLAUDE.md` |
-| Project topology file | ~30 | On skill invocation |
+| Project topology file | ~30 | When present |
 | One reasoning module | ~50 | On signal detection |
-| Concurrency module (pass 2) | ~50 | When topology indicates 1:N |
+| Concurrency module (pass 2) | ~50 | When code/deploy config permit overlap |
 | Full anti-pattern catalog | ~60 | Review/debug mode only |
 | **Typical coding session** | **~110** | **Detector + topology + one module** |
 | **Typical with concurrency** | **~160** | **Above + concurrency module** |
@@ -304,11 +306,13 @@ Compare to loading full architecture docs: 500-2000+ lines.
 
 ```
 distributed-architect/
-├── CLAUDE.md                       # Plugin instructions + Layer 1 detector
+├── .codex-plugin/plugin.json       # Codex manifest
+├── .claude-plugin/plugin.json      # Claude Code manifest
+├── CLAUDE.md                       # Optional boundary signal reference
 ├── docs/                           # Design docs
 │   ├── case-study-ai-video-platform.md
 │   ├── design-philosophy.md
-│   ├── reasoning-framework.md      # Full framework (source of truth)
+│   ├── reasoning-framework.md      # Detailed reasoning reference
 │   └── plugin-architecture.md      # This file
 ├── modules/                        # Layer 2: Reasoning modules
 │   ├── state-mutation.md
@@ -317,14 +321,13 @@ distributed-architect/
 │   ├── interaction.md
 │   └── concurrency.md
 ├── catalog/                        # Layer 3: Anti-pattern entries
-│   ├── _drafts/                    # Auto-captured, not yet promoted
 │   ├── tight-retry-loop.md
 │   ├── lost-data-at-ack.md
 │   ├── channel-conflation.md
 │   ├── boundary-state-leak.md
 │   ├── compounding-retry.md
 │   └── premature-state-transition.md
-├── skills/                         # Claude Code skill definitions
+├── skills/                         # Shared Claude Code and Codex skills
 │   ├── dist-check/
 │   │   └── SKILL.md               # Coding-time analysis
 │   ├── dist-design/
@@ -339,16 +342,16 @@ distributed-architect/
 
 | Question | Decision | Rationale |
 |----------|----------|-----------|
-| Where does detector live? | `CLAUDE.md`, read directly by the skills | Skills are the only trigger Claude Code loads automatically; a project that wants passive detection `@`-imports this file's table into its own `CLAUDE.md` |
-| Auto-create or manual-create topology? | Manual create, auto-update | Initial mapping needs human judgment; updates can be detected |
-| How to handle race conditions? | Separate concurrency module (5th module), triggered by topology cardinality | Concurrency is a distinct dimension, not an overlay on boundary analysis |
+| Where does detector live? | Optional `CLAUDE.md` reference; skills have their own entry prompts | Skills are the only trigger Claude Code loads automatically; a project that wants passive detection `@`-imports this file's table into its own `CLAUDE.md` |
+| Auto-create or manual-create topology? | Optional cache; flag disagreements | Code and deploy config are the evidence |
+| How to handle race conditions? | Separate concurrency module (5th module), triggered by possible overlap in code/deploy config | Concurrency is a distinct dimension, not an overlay on boundary analysis |
 | Sequential or interleaved analysis? | Sequential two-pass (boundary → concurrency) | LLMs use chain-of-thought; parallel/interleaved analysis produces shallow results on both |
-| Learning loop for new patterns? | Auto-draft on first occurrence, promote on second or user confirmation | Reduces noise while still capturing patterns |
+| Learning loop for new patterns? | Draft unmatched confirmed causes in the project; manual promotion after repetition or confirmation | Reduces noise while still capturing patterns |
 | How many entry points? | Three: `/dist-design`, `/dist-check`, `/dist-debug` | Design (forward/trade-offs), coding (forward/correctness), debugging (backward/root-cause) are different reasoning directions |
 | Fixed vs dynamic cardinality? | Document precisely — fixed counts matter for failure analysis | `3 nodes, 2 replicas` gives different reasoning than just `N` |
 
 ## Open Questions
 
-1. **Topology auto-update trigger**: What code patterns should trigger "your topology may be stale"? New connection handler? New queue client? Import of a new service client?
+1. **Topology staleness signal**: What code patterns should trigger "your topology may be stale"? New connection handler? New queue client? Import of a new service client?
 2. **Cross-project portability**: When loaded on a 5-10x more complex project, does the topology format scale, or does it need hierarchy/grouping?
 3. **Abstraction verification**: Periodically check that modules, catalog, and skills remain project-agnostic. Case-study-specific content belongs in `docs/case-study-*.md` files only.
