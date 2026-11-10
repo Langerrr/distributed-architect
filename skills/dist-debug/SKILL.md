@@ -5,104 +5,40 @@ argument-hint: "<symptom description, error message, or log snippet>"
 allowed-tools: Read, Grep, Glob
 ---
 
-# /dist-debug — Debug-Time Root Cause Analysis
+# dist-debug — Root Cause Analysis
 
-Trace distributed system failures backward from symptom to root cause. In distributed systems, the symptom component and the cause component are often different. Trace backward, don't just fix where it hurts.
+Start with the supplied symptom, error or log. Establish where it appears, when it happens, and relevant recent changes; ask for missing evidence that would narrow the investigation.
 
-## Arguments
+## Trace backward
 
-- `$ARGUMENTS` may contain a symptom description, error message, or log snippet
+Read producers, consumers and deployment configuration around the symptom. Use the project's optional `.dist-architect/topology.yaml` (or location in project guidance) as a cache; flag disagreements with code or deploy config and proceed from that evidence. No topology file is required.
 
-## Step 1: Gather Symptoms
+Trace from symptom to its dependencies and the operations that produce them:
 
-From `$ARGUMENTS` or by asking the user:
-- What's the observable behavior? (error message, unexpected state, performance issue)
-- Which component reported the error? (this is the symptom component)
-- When does it happen? (always, intermittently, under load, after a specific event)
-- Any recent changes? (new code, config change, scaling event)
+    Symptom in A <- state/data from B <- operation in C <- possible failure condition
 
-## Step 2: Load Project Topology
+At each hop: could state be unexpected, data stale or missing, or timing/ordering responsible? Did the operation fail, or the channel that watches it? Use [Failure mode](../../modules/failure-mode.md), [State mutation](../../modules/state-mutation.md), [Data lifecycle](../../modules/data-lifecycle.md) or [Interaction](../../modules/interaction.md) where they help. If code and deploy config allow overlapping operations, also use [Concurrency](../../modules/concurrency.md).
 
-Load the topology file to understand the communication graph. The root cause is almost always at a boundary — knowing the boundaries narrows the search.
+Match the symptom and mechanism against the [catalog index](../../catalog/INDEX.md), then read candidate entries.
 
-## Step 3: Identify the Symptom Boundary
+## Test hypotheses
 
-From the topology:
-- What components feed into the symptom component?
-- What data/state does the symptom component depend on from other components?
-- What communication paths lead to the symptom component?
+For each plausible hypothesis, state the cause boundary, mechanism, and what you expect to observe if it is right. Run a discriminating log, query or test check when available and safe within the task's authority. Report the observed result; if you cannot run it, name the exact check and why it remains unrun. Distinguish confirmed causes from hypotheses.
 
-## Step 4: Backward Trace
+## Trace the fix forward
 
-Starting from the symptom, trace backward through the topology:
+Follow the proposed fix through the same chain in reverse:
 
-```
-Symptom: [what's observed, in which component]
-   <- Depends on: [state/data from component X]
-      <- Which depends on: [operation in component Y]
-         <- Which could fail if: [condition in component Z]
-```
+    Fix in C -> changed state/data in B -> resolved dependency in A -> symptom gone?
 
-At each hop, ask:
-- Could this component be in an unexpected state?
-- Could the data arriving here be stale, missing, or corrupted?
-- Could timing/ordering explain the symptom?
+At each hop: does the fix resolve all data, or only new data? Identify accumulated damage and the cleanup, migration or backfill needed for existing state.
 
-## Step 5: Anti-Pattern Match
+## Capture an unmatched confirmed cause
 
-Read `${CLAUDE_PLUGIN_ROOT}/catalog/INDEX.md`, match the symptom shape against its "Symptom shape" column, then open the matching entry file for the full shape/detection/fix.
+When evidence confirms a cause matching no catalog entry, write a project-agnostic pattern draft to `.dist-architect/pattern-drafts/<slug>.md` relative to the root of the project being investigated. Include shape, confirming evidence, detection, symptoms and fix, including existing-data cleanup. Avoid secrets and project-specific identifiers. If writing is unavailable, provide the draft and destination and state that it was not saved.
 
-## Step 6: Hypothesis Formation
+Promotion into the installed plugin's catalog is a manual maintainer step; do not write into the installed plugin.
 
-Form 1-3 hypotheses based on the backward trace and anti-pattern match:
+## Report
 
-```
-Hypothesis 1 (highest confidence):
-  Root cause: [what's actually wrong]
-  Boundary: [which boundary the issue crosses]
-  Mechanism: [how the cause produces the symptom]
-  Verification: [how to confirm — specific log, query, or test]
-```
-
-## Step 7: Forward Trace the Fix
-
-For each hypothesis, take the proposed fix and trace it **forward** through the same path the backward trace established. The backward trace gave you the chain; now run the fix through it in the opposite direction:
-
-```
-Fix applied at: [root cause component]
-   -> Does it change: [state/data at component Y]?
-      -> Does that resolve: [the dependency at component X]?
-         -> Does the symptom disappear?
-```
-
-At each hop, ask: **does this resolve for all data, or only for new data?**
-
-If any hop answers "only going forward" — the fix leaves accumulated damage from the bug's lifetime. Flag what cleanup is needed (purge, migration, backfill) and whether it can run at startup, as a one-off script, or requires a migration.
-
-## Step 8: Output
-
-```
-## Distributed Debug Analysis
-
-**Symptom**: [description]
-**Symptom component**: [where it manifests]
-**Probable cause component**: [where it originates]
-**Boundary involved**: [which inter-component boundary]
-
-### Backward Trace
-[The chain from symptom to probable cause]
-
-### Anti-Pattern Match
-[Matching pattern, or "no known pattern match"]
-
-### Hypotheses
-[Ranked by confidence with verification steps]
-
-### Forward Trace
-[For top hypothesis: trace the fix forward through the same path. Flag any hop where the fix only addresses future data, not existing state.]
-
-### Immediate Investigation Steps
-1. [Most targeted check to confirm/deny top hypothesis]
-2. [Next check]
-3. [Fallback investigation if above don't confirm]
-```
+Show the backward trace, hypotheses with predicted observations and check results (or unrun checks), and the forward trace including existing-data repair. Mention a matching pattern or saved draft where relevant. Keep the report proportional to the evidence, without empty sections.

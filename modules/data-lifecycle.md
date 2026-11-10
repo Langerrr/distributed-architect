@@ -2,7 +2,7 @@
 
 Use when: Data is crossing a system boundary — being serialized, sent, stored in another system, or deleted from one.
 
-## Checklist
+## Questions
 
 ### 1. Map the Full Lifecycle
 For the data object in question, trace:
@@ -18,7 +18,7 @@ At every point where data moves between systems:
 - If this copy is lost, can the data be reconstructed? From what source?
 
 ### 3. Check the Deletion Trigger
-- Is anything still depending on this data when it's deleted?
+- Is anything still depending on this data when it is deleted or acknowledged?
 - Is there a window between "removed from store A" and "safely in store B"? (the gap)
 - Could a retry or recovery mechanism need this data after deletion?
 
@@ -31,8 +31,3 @@ At every point where data moves between systems:
 - Is the data too large for the storage mechanism? (e.g., large JSON in a DB row)
 - Is every-record storage justified, or should it be selective/on-demand?
 - Does the storage choice match the access pattern (frequent reads vs. archival)?
-
-## Red Flags
-- Data exists in only one place with no copy before a destructive operation (ACK, delete, overwrite)
-- "Source of truth" ambiguous — two systems both claim to own the data
-- Automatic storage of large payloads that only matter in rare cases

@@ -1,13 +1,13 @@
 # Concurrency Analysis
 
-Use when: The component being modified is on the "1" side of a 1:N relationship (per project topology), or multiple actors access the same resource.
+Use when: Code and deploy configuration show operations can overlap or multiple actors access the same resource. Optional topology caches that reading; flag disagreements and follow the code and configuration.
 
-This module runs as a SECOND PASS after boundary correctness analysis. Each operation may be individually correct but break when overlapping in time.
+Consider concurrency after boundary correctness. Each operation may be individually correct but break when overlapping in time.
 
-## Checklist
+## Questions
 
 ### 1. Identify Concurrent Actors
-From the topology file:
+From code and deploy configuration, with topology as an optional cache:
 - Which components can send to this component simultaneously?
 - How many instances can be active? (N dynamic? fixed count?)
 - What triggers concurrent operations? (e.g., two service instances completing tasks at the same time)
@@ -37,19 +37,3 @@ Example: Actor reads "instance status: available", assigns a task. But the insta
 ### 6. Resource Contention
 - Can concurrent operations exhaust a shared resource? (connection pool, queue depth, memory)
 - Under load, does contention cause timeouts that trigger retries that cause more contention? (thundering herd)
-
-## Resolution Patterns
-
-| Problem | Common solutions |
-|---------|-----------------|
-| Write-write conflict | Atomic operations (SETNX, CAS), optimistic locking, single-writer principle |
-| Read-write race | Read-then-act as atomic unit, or accept eventual consistency |
-| Ordering violation | Sequence numbers, idempotency keys, event sourcing |
-| Atomicity gap | Transactions, compare-and-swap, atomic store operations |
-| Thundering herd | Jitter on retries, circuit breakers, backpressure |
-
-## Red Flags
-- "Check then act" across a network boundary without atomicity
-- Shared mutable state accessed by N actors without coordination
-- Retry storms from N actors hitting the same recovering service
-- Implicit ordering assumption in message handler logic

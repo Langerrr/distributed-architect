@@ -5,85 +5,33 @@ argument-hint: "[path] | --staged | --diff <range>"
 allowed-tools: Read, Grep, Glob, Bash(git:*)
 ---
 
-# /dist-check — Coding-Time Boundary Analysis
+# dist-check — Boundary Analysis
 
-Analyze code changes for distributed system correctness issues. Runs a two-pass analysis: boundary correctness, then concurrency correctness (if topology indicates).
+Analyze a supplied path, staged changes (`git diff --cached`), or a diff range (`git diff <range>`). With no scope supplied, use `git diff`; if it is empty, ask what change to analyze. Read callers and consumers needed to understand the changed boundary.
 
-## Arguments
+## Find the boundary
 
-- `$ARGUMENTS` may contain: a file/dir path, `--staged`, or `--diff <range>`
+Which independently deployed components exchange data or react to changed state? If the change crosses no boundary, respond with one line: "No boundary crossing detected."
 
-## Step 1: Gather Changes
+Read the questions relevant to the change:
 
-Based on `$ARGUMENTS`:
-- If a file/dir path is given, read those files
-- If `--staged`, run `git diff --cached`
-- If `--diff <range>`, run `git diff <range>`
-- If no arguments, run `git diff` for uncommitted changes
-- If no diff at all, ask the user what change to analyze
-
-Identify which components are being modified.
-
-## Step 2: Load Project Topology
-
-Look for a topology file in the project (`.dist-architect/topology.yaml`, or check project CLAUDE.md for location). If none exists, note this and proceed with what you can infer from the code.
-
-## Step 3: Classify the Change
-
-For each modified component, determine which boundary signal applies:
-
-| Signal | Condition |
+| Change | Questions |
 |--------|-----------|
-| `state-mutation` | Changing state/status that another process reads |
-| `data-lifecycle` | Data crossing a serialization, network, or storage boundary |
-| `failure-mode` | Error handling for cross-component operations |
-| `interaction` | New message type, API call, or event between components |
+| State/status another actor observes | [State mutation](../../modules/state-mutation.md) |
+| Serialization, transfer, storage or deletion | [Data lifecycle](../../modules/data-lifecycle.md) |
+| Cross-component errors, retries or timeouts | [Failure mode](../../modules/failure-mode.md) |
+| Messages, API calls or events | [Interaction](../../modules/interaction.md) |
 
-If none apply (purely internal, single-component change), report "No boundary crossing detected" and stop.
+Use these questions to investigate concerns; they are prompts for reasoning, not a questionnaire to reproduce in the report.
 
-## Step 4: Pass 1 — Boundary Correctness
+## Can two of these run at once?
 
-Read the relevant reasoning module from `${CLAUDE_PLUGIN_ROOT}/modules/` and walk through its checklist. Answer each question concretely for the specific change. Do not skip questions.
+Read code and deploy configuration for concurrent requests, tasks, consumers, replicas and shared resources. If operations can overlap, read [Concurrency](../../modules/concurrency.md) after considering the individual operation.
 
-Document:
-- Each checklist question and your answer
-- Any concerns found
-- Any assumptions the change makes about other components
+Use the project's optional `.dist-architect/topology.yaml` (or location named by project guidance) as a cache of that reading. If it disagrees with code or deploy config, say where and use the implementation evidence. Missing topology is no barrier. If deployment information is unavailable, state the assumption about overlap and what breaks if it is wrong. Do not edit topology as part of the check.
 
-## Step 5: Pass 2 — Concurrency Correctness
+Read the [catalog index](../../catalog/INDEX.md) and open entries matching the mechanism you find.
 
-Check the topology: is the component being modified on the "1" side of a 1:N relationship?
+## Report
 
-- **If yes**: Read `${CLAUDE_PLUGIN_ROOT}/modules/concurrency.md` and walk through its checklist.
-- **If no**: Skip this pass. Note: "No concurrency concern at this boundary (1:1 or N-side)."
-
-## Step 6: Anti-Pattern Scan
-
-Read `${CLAUDE_PLUGIN_ROOT}/catalog/INDEX.md` for the current pattern list, then open the matching entry file for the full shape/detection/fix.
-
-## Step 7: Output
-
-Report findings in this format:
-
-```
-## Distributed Systems Analysis
-
-**Components involved**: [list]
-**Boundary type**: [state-mutation | data-lifecycle | failure-mode | interaction]
-**Topology**: [cardinality at this boundary]
-
-### Pass 1: Boundary Correctness
-[Checklist results — concerns or "clean"]
-
-### Pass 2: Concurrency
-[Checklist results, or "skipped — no 1:N at this boundary"]
-
-### Anti-Pattern Check
-[Matches found, or "none"]
-
-### Recommendations
-[Specific changes needed, or "no issues found"]
-
-### Topology Update
-[Does the topology file need updating? If yes, what changed.]
-```
+Report only concerns found: boundary, mechanism (with code evidence), and suggested change. State the assumption the change rests on and what breaks if it is wrong. Include topology disagreements here when they affect that assumption. If boundary analysis finds no concerns, say so briefly and state the key assumption and its failure consequence. Omit question-by-question answers, empty sections and N/A entries.
